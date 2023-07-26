@@ -1,4 +1,4 @@
-const Thread = require("../models/threadModel");
+const Thread = require("../models/threadModel.cjs");
 const mongoose = require("mongoose");
 
 // GET every threads
@@ -20,6 +20,7 @@ const getSingleThread = async (req, res) => {
   if (!thread) {
     return res.status(404).json({ error: "No such thread" });
   }
+
   res.status(200).json(thread);
 };
 
@@ -38,26 +39,19 @@ const updateThread = async (req, res) => {
 
 // Create thread
 const createThread = async (req, res) => {
-  const { content, votes } = req.body;
+  const { opName, subject, comment, image } = req.body;
   try {
-    const thread = await Thread.create({ subject, comment, image });
+    const thread = await Thread.create({
+      opName,
+      subject,
+      comment,
+      image,
+    });
     res.status(200).json(thread);
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error: error.message });
   }
-};
-
-// Delete thread
-const deleteThread = async (req, res) => {
-  const { id } = req.body;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: "No such thread" });
-  }
-  const thread = await Thread.findOneAndDelete({ _id: id });
-  if (!thread) {
-    return res.status(404).json({ error: "No such thread" });
-  }
-  res.status(200).json(thread);
 };
 
 module.exports = { getThreads, getSingleThread, updateThread, createThread };

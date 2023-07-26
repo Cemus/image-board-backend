@@ -2,19 +2,21 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const threadSchema = new Schema(
+const replySchema = new Schema(
   {
-    subject: {
+    name: {
       type: String,
       required: false,
+      default: "Anonymous",
     },
     comment: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
     },
     image: {
-      type: File,
-      required: true,
+      type: String,
+      required: false,
     },
   },
   { timestamps: true }
