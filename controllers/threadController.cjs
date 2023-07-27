@@ -1,5 +1,5 @@
-const Thread = require("../models/threadModel.cjs");
 const mongoose = require("mongoose");
+const { Thread, Reply } = require("../models/threadModel.cjs");
 
 // GET every threads
 const getThreads = async (req, res) => {
@@ -24,20 +24,7 @@ const getSingleThread = async (req, res) => {
   res.status(200).json(thread);
 };
 
-// PATCH one thread
-const updateThread = async (req, res) => {
-  const { id } = req.body;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ error: "No such thread" });
-  }
-  const thread = await Thread.findOneAndUpdate({ _id: id }, ...req.body);
-  if (!thread) {
-    return res.status(404).json({ error: "No such thread" });
-  }
-  res.status(200).json(thread);
-};
-
-// Create thread
+// POST thread
 const createThread = async (req, res) => {
   const { opName, subject, comment, image } = req.body;
   try {
@@ -46,6 +33,7 @@ const createThread = async (req, res) => {
       subject,
       comment,
       image,
+      replies: [],
     });
     res.status(200).json(thread);
   } catch (error) {
@@ -54,4 +42,37 @@ const createThread = async (req, res) => {
   }
 };
 
-module.exports = { getThreads, getSingleThread, updateThread, createThread };
+// PATCH reply
+const createReply = async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ error: "bad ID" });
+  }
+  try {
+    const newReply = await Reply.create({
+      ...req.body,
+      date: Date.now(),
+    });
+    await newReply.save();
+    const thread = await Thread.findById(id);
+    if (!thread) {
+      return res.status(404).json({ error: "No such thread" });
+    }
+    thread.replies.push(newReply);
+
+    await thread.save();
+    res.status(200).json(thread);
+  } catch (error) {
+    console.log(error);
+    console.log(error.message);
+    console.log(error.stack);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+module.exports = {
+  getThreads,
+  getSingleThread,
+  createThread,
+  createReply,
+};

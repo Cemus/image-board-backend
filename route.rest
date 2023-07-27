@@ -9,7 +9,16 @@ Content-Type: application/json
 
 {
   "opName": "Admin",
-  "subject": "Test!",
-  "comment": "Currently testing post...",
-  "image": "https://www.etudes-en-france.net/wp-content/uploads/2018/07/test.jpg"
+  "subject": ":D",
+  "comment": ":|",
+  "image": "https://as1.ftcdn.net/v2/jpg/02/42/27/70/1000_F_242277080_co93xxrF8alcqCBldi3UzQks49OyRMKu.jpg"
 }
+
+###
+PATCH http://localhost:3000/api/threads/64c23d3349a0171ce98de928
+Content-Type: application/json
+
+{
+  "comment":"Testing ?"
+}
+

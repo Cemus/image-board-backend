@@ -1,6 +1,26 @@
 const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
+const replySchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: false,
+      default: "Anonymous",
+    },
+    comment: {
+      type: String,
+      required: true,
+      default: "",
+    },
+    image: {
+      type: String,
+      required: false,
+      default: "",
+    },
+  },
+  { timestamps: true }
+);
 
 const threadSchema = new Schema(
   {
@@ -22,8 +42,12 @@ const threadSchema = new Schema(
       type: String,
       required: false,
     },
+    replies: [replySchema],
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Thread", threadSchema);
+const Thread = mongoose.model("Thread", threadSchema);
+const Reply = mongoose.model("Reply", replySchema);
+
+module.exports = { Thread, Reply };
