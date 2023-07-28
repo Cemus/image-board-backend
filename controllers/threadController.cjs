@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { Thread, Reply } = require("../models/threadModel.cjs");
+const { validateMIMEType } = require("validate-image-type");
 
 // GET every threads
 const getThreads = async (req, res) => {
@@ -24,15 +25,47 @@ const getSingleThread = async (req, res) => {
   res.status(200).json(thread);
 };
 
+//GET images
+const getImage = async (req, res) => {
+  fs.readFile(directory_name, function (err, content) {
+    if (err) {
+      res.writeHead(400);
+      console.log(err);
+      res.end("No such image");
+    } else {
+      //specify the content type in the response will be an image
+      res.writeHead(200);
+      res.end(content);
+    }
+  });
+};
+
 // POST thread
 const createThread = async (req, res) => {
-  const { opName, subject, comment, image } = req.body;
+  if (!req.file) {
+    return res.status(400).json({ error: "Aucun fichier n'a été téléchargé." });
+  }
+  const imagePath = req.file.path;
+  const result = await validateMIMEType(req.file.path, {
+    allowMimeTypes: [
+      "image/jpeg",
+      "image/jpg",
+      "image/gif",
+      "image/png",
+      "image/svg+xml",
+    ],
+  });
+  if (!result.ok) {
+    console.error(result.error);
+    return;
+  }
   try {
+    const { opName, subject, comment } = req.body;
     const thread = await Thread.create({
       opName,
       subject,
       comment,
-      image,
+      image: imagePath,
       replies: [],
     });
     res.status(200).json(thread);
@@ -75,4 +108,5 @@ module.exports = {
   getSingleThread,
   createThread,
   createReply,
+  getImage,
 };

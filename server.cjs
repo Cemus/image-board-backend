@@ -1,8 +1,8 @@
 const express = require("express");
 require("dotenv").config();
 const mongoose = require("mongoose");
-const multer = require("multer");
 const threadRoutes = require("./routes/thread.cjs");
+const path = require("path");
 
 const port = process.env.PORT;
 const app = express();
@@ -12,7 +12,7 @@ app.use((req, res, next) => {
   console.log(req.path, req.method);
   next();
 });
-
+app.use(express.static(path.join(__dirname, "images")));
 app.use("/api/threads", threadRoutes);
 
 mongoose

@@ -11,12 +11,10 @@ const replySchema = new Schema(
     comment: {
       type: String,
       required: true,
-      default: "",
     },
     image: {
       type: String,
       required: false,
-      default: "",
     },
   },
   { timestamps: true }
@@ -40,7 +38,7 @@ const threadSchema = new Schema(
     },
     image: {
       type: String,
-      required: false,
+      required: true,
     },
     replies: [replySchema],
   },
