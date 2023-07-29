@@ -1,6 +1,7 @@
+const { validateImageType } = require("../utils/validateImageType.cjs");
+const { getImageMetadata } = require("../utils/getImageMetadata.cjs");
 const mongoose = require("mongoose");
 const { Thread, Reply } = require("../models/threadModel.cjs");
-const { validateMIMEType } = require("validate-image-type");
 
 // GET every threads
 const getThreads = async (req, res) => {
@@ -43,47 +44,68 @@ const getImage = async (req, res) => {
 // POST thread
 const createThread = async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: "Aucun fichier n'a été téléchargé." });
+    return res.status(400).json({ error: "No file has been downloaded." });
   }
   const imagePath = req.file.path;
-  const result = await validateMIMEType(req.file.path, {
-    allowMimeTypes: [
-      "image/jpeg",
-      "image/jpg",
-      "image/gif",
-      "image/png",
-      "image/svg+xml",
-    ],
-  });
+  const result = await validateImageType(imagePath);
   if (!result.ok) {
     console.error(result.error);
-    return;
+    return res.status(400).json({ error: "Invalid file format." });
   }
+  const metadata = await getImageMetadata(imagePath);
+  const { width, height } = metadata;
   try {
     const { opName, subject, comment } = req.body;
+    const { size } = req.file;
     const thread = await Thread.create({
       opName,
       subject,
       comment,
       image: imagePath,
+      imageWidth: width,
+      imageheight: height,
+      imageSize: Math.floor(size / 1000),
       replies: [],
     });
     res.status(200).json(thread);
   } catch (error) {
     console.log(error);
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
 // PATCH reply
 const createReply = async (req, res) => {
+  let imagePath = null;
+  let width = 0;
+  let height = 0;
+  if (req.file) {
+    imagePath = req.file.path;
+    const result = await validateImageType(imagePath);
+    if (!result.ok) {
+      console.error(result.error);
+      return res.status(400).json({ error: "Invalid file format." });
+    }
+    const metadata = await getImageMetadata(imagePath);
+    width = metadata.width;
+    height = metadata.height;
+    console.log(width);
+  }
+
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ error: "bad ID" });
   }
   try {
+    const { name, comment } = req.body;
+    const { size } = req.file;
     const newReply = await Reply.create({
-      ...req.body,
+      name,
+      comment,
+      image: imagePath,
+      imageWidth: width,
+      imageHeight: height,
+      imageSize: Math.floor(size / 1000),
       date: Date.now(),
     });
     await newReply.save();
@@ -96,10 +118,11 @@ const createReply = async (req, res) => {
     await thread.save();
     res.status(200).json(thread);
   } catch (error) {
+    console.log("final catch");
     console.log(error);
     console.log(error.message);
     console.log(error.stack);
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 

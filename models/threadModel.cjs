@@ -16,6 +16,18 @@ const replySchema = new Schema(
       type: String,
       required: false,
     },
+    imageWidth: {
+      type: Number,
+      required: false,
+    },
+    imageHeight: {
+      type: Number,
+      required: false,
+    },
+    imageSize: {
+      type: Number,
+      required: false,
+    },
   },
   { timestamps: true }
 );
@@ -39,6 +51,18 @@ const threadSchema = new Schema(
     image: {
       type: String,
       required: true,
+    },
+    imageWidth: {
+      type: Number,
+      required: false,
+    },
+    imageHeight: {
+      type: Number,
+      required: false,
+    },
+    imageSize: {
+      type: Number,
+      required: false,
     },
     replies: [replySchema],
   },

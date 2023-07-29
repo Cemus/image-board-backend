@@ -24,7 +24,7 @@ router.get("/", getThreads);
 router.get("/:id", getSingleThread);
 
 // PATCH one thread (replies)
-router.patch("/:id", createReply);
+router.patch("/:id", upload.single("image"), createReply);
 
 // POST one thread
 router.post("/", upload.single("image"), createThread);
