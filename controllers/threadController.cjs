@@ -63,10 +63,11 @@ const createThread = async (req, res) => {
       comment,
       image: imagePath,
       imageWidth: width,
-      imageheight: height,
+      imageHeight: height,
       imageSize: Math.floor(size / 1000),
       replies: [],
     });
+    console.log(width, height);
     res.status(200).json(thread);
   } catch (error) {
     console.log(error);
@@ -98,7 +99,7 @@ const createReply = async (req, res) => {
   }
   try {
     const { name, comment } = req.body;
-    const { size } = req.file;
+    size = req.file ? req.file.size : 0;
     const newReply = await Reply.create({
       name,
       comment,
