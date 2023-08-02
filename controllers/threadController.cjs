@@ -2,6 +2,7 @@ const { validateImageType } = require("../utils/validateImageType.cjs");
 const { getImageMetadata } = require("../utils/getImageMetadata.cjs");
 const mongoose = require("mongoose");
 const { Thread, Reply } = require("../models/threadModel.cjs");
+const fs = require("fs");
 
 // GET every threads
 const getThreads = async (req, res) => {
@@ -28,15 +29,32 @@ const getSingleThread = async (req, res) => {
 
 //GET images
 const getImage = async (req, res) => {
-  fs.readFile(directory_name, function (err, content) {
+  const { imagePath } = req.params;
+  fs.readFile(imagePath, async function (err, imageBuffer) {
     if (err) {
       res.writeHead(400);
       console.log(err);
       res.end("No such image");
     } else {
-      //specify the content type in the response will be an image
-      res.writeHead(200);
-      res.end(content);
+      try {
+        if (imagePath.endsWith(".jpg") || imagePath.endsWith(".jpeg")) {
+          const jpegBuffer = await sharp(imageBuffer)
+            .jpeg({ quality: 85 })
+            .toBuffer();
+          const webpBuffer = await sharp(jpegBuffer).webp().toBuffer();
+
+          res.setHeader("Content-Type", "image/webp");
+          res.writeHead(200);
+          res.end(webpBuffer);
+        } else {
+          res.writeHead(200);
+          res.end(imageBuffer);
+        }
+      } catch (err) {
+        console.error(err);
+        res.writeHead(500);
+        res.end("Failed to process the image.");
+      }
     }
   });
 };
@@ -67,7 +85,6 @@ const createThread = async (req, res) => {
       imageSize: Math.floor(size / 1000),
       replies: [],
     });
-    console.log(width, height);
     res.status(200).json(thread);
   } catch (error) {
     console.log(error);
@@ -90,7 +107,6 @@ const createReply = async (req, res) => {
     const metadata = await getImageMetadata(imagePath);
     width = metadata.width;
     height = metadata.height;
-    console.log(width);
   }
 
   const { id } = req.params;
@@ -119,10 +135,6 @@ const createReply = async (req, res) => {
     await thread.save();
     res.status(200).json(thread);
   } catch (error) {
-    console.log("final catch");
-    console.log(error);
-    console.log(error.message);
-    console.log(error.stack);
     return res.status(400).json({ error: error.message });
   }
 };
