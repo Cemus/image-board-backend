@@ -3,7 +3,7 @@ const { getImageMetadata } = require("../utils/getImageMetadata.cjs");
 const mongoose = require("mongoose");
 const { Thread, Reply } = require("../models/threadModel.cjs");
 const fs = require("fs");
-
+const { idFormat } = require("../utils/idFormat.cjs");
 // GET every threads
 const getThreads = async (req, res) => {
   const threads = await Thread.find({});
@@ -85,6 +85,7 @@ const createThread = async (req, res) => {
       imageSize: Math.floor(size / 1000),
       replies: [],
     });
+
     res.status(200).json(thread);
   } catch (error) {
     console.log(error);
@@ -110,11 +111,30 @@ const createReply = async (req, res) => {
   }
 
   const { id } = req.params;
+  console.log(id);
+  console.log(idFormat(id));
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ error: "bad ID" });
   }
   try {
     const { name, comment } = req.body;
+    //Ne marche pas
+    const regex = /(\d{8})/g;
+    if (regex.test(comment)) {
+      const matches = comment.match(regex);
+      for (const match of matches) {
+        console.log("slt");
+        const parentReply = await Reply.findOne({ _id: formatId(match) });
+        if (parentReply) {
+          parentIds.push(parentReply._id);
+        } else {
+          console.log(
+            `Aucun commentaire parent trouvé pour la référence ${match}`
+          );
+        }
+      }
+    }
+    // Il faudrait garder les _id standards ou trouver un moyen de formatter qu'en front.
     size = req.file ? req.file.size : 0;
     const newReply = await Reply.create({
       name,
@@ -124,7 +144,9 @@ const createReply = async (req, res) => {
       imageHeight: height,
       imageSize: Math.floor(size / 1000),
       date: Date.now(),
+      id: idFormat(id),
     });
+
     await newReply.save();
     const thread = await Thread.findById(id);
     if (!thread) {

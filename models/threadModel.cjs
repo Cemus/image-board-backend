@@ -28,6 +28,7 @@ const replySchema = new Schema(
       type: Number,
       required: false,
     },
+    replies: [],
   },
   { timestamps: true }
 );
