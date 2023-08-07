@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const replySchema = new Schema(
   {
+    formatedId: {
+      type: String,
+    },
     name: {
       type: String,
       required: false,
@@ -28,7 +31,11 @@ const replySchema = new Schema(
       type: Number,
       required: false,
     },
-    replies: [],
+    replies: [
+      {
+        type: String,
+      },
+    ],
   },
   { timestamps: true }
 );

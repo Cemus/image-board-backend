@@ -112,21 +112,38 @@ const createReply = async (req, res) => {
 
   const { id } = req.params;
   console.log(id);
-  console.log(idFormat(id));
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ error: "bad ID" });
   }
+
+  size = req.file ? req.file.size : 0;
+  const { name, comment } = req.body;
+  const newReply = await Reply.create({
+    name,
+    comment,
+    image: imagePath,
+    imageWidth: width,
+    imageHeight: height,
+    imageSize: Math.floor(size / 1000),
+    date: Date.now(),
+  });
+
+  await newReply.save();
+  newReply.formatedId = idFormat(newReply._id);
+  await newReply.save();
   try {
-    const { name, comment } = req.body;
-    //Ne marche pas
     const regex = /(\d{8})/g;
     if (regex.test(comment)) {
       const matches = comment.match(regex);
       for (const match of matches) {
-        console.log("slt");
-        const parentReply = await Reply.findOne({ _id: formatId(match) });
+        const parentReply = await Reply.findOne({
+          formatedId: match,
+        });
+        //ça ne marche pas à revoir !
         if (parentReply) {
-          parentIds.push(parentReply._id);
+          console.log(parentReply);
+          parentReply.replies.push(newReply.formatedId);
+          console.log(parentReply.replies);
         } else {
           console.log(
             `Aucun commentaire parent trouvé pour la référence ${match}`
@@ -134,20 +151,6 @@ const createReply = async (req, res) => {
         }
       }
     }
-    // A revoir : Il faudrait garder les _id standards ou trouver un moyen de formatter qu'en front.
-    size = req.file ? req.file.size : 0;
-    const newReply = await Reply.create({
-      name,
-      comment,
-      image: imagePath,
-      imageWidth: width,
-      imageHeight: height,
-      imageSize: Math.floor(size / 1000),
-      date: Date.now(),
-      id: idFormat(id),
-    });
-
-    await newReply.save();
     const thread = await Thread.findById(id);
     if (!thread) {
       return res.status(404).json({ error: "No such thread" });
@@ -157,6 +160,7 @@ const createReply = async (req, res) => {
     await thread.save();
     res.status(200).json(thread);
   } catch (error) {
+    console.log(error);
     return res.status(400).json({ error: error.message });
   }
 };
