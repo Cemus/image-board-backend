@@ -19,7 +19,7 @@ const getSingleThread = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ error: "No such thread" });
   }
-  const thread = await Thread.findById(id);
+  const thread = await Thread.findById(id).populate("replies");
   if (!thread) {
     return res.status(404).json({ error: "No such thread" });
   }
@@ -95,6 +95,7 @@ const createThread = async (req, res) => {
 
 // PATCH reply
 const createReply = async (req, res) => {
+  //Image
   let imagePath = null;
   let width = 0;
   let height = 0;
@@ -109,14 +110,14 @@ const createReply = async (req, res) => {
     width = metadata.width;
     height = metadata.height;
   }
-
+  size = req.file ? req.file.size : 0;
+  // Test ID
   const { id } = req.params;
   console.log(id);
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ error: "bad ID" });
   }
-
-  size = req.file ? req.file.size : 0;
+  //Creation de la réponse
   const { name, comment } = req.body;
   const newReply = await Reply.create({
     name,
@@ -127,10 +128,17 @@ const createReply = async (req, res) => {
     imageSize: Math.floor(size / 1000),
     date: Date.now(),
   });
-
   await newReply.save();
+
   newReply.formatedId = idFormat(newReply._id);
   await newReply.save();
+
+  //Le thread
+  const thread = await Thread.findById(id);
+  if (!thread) {
+    return res.status(404).json({ error: "No such thread" });
+  }
+  //La reponse est-elle une réponse à quelqu'un ?
   try {
     const regex = /(\d{8})/g;
     if (regex.test(comment)) {
@@ -139,11 +147,9 @@ const createReply = async (req, res) => {
         const parentReply = await Reply.findOne({
           formatedId: match,
         });
-        //ça ne marche pas à revoir !
         if (parentReply) {
-          console.log(parentReply);
           parentReply.replies.push(newReply.formatedId);
-          console.log(parentReply.replies);
+          await parentReply.save();
         } else {
           console.log(
             `Aucun commentaire parent trouvé pour la référence ${match}`
@@ -151,10 +157,7 @@ const createReply = async (req, res) => {
         }
       }
     }
-    const thread = await Thread.findById(id);
-    if (!thread) {
-      return res.status(404).json({ error: "No such thread" });
-    }
+
     thread.replies.push(newReply);
 
     await thread.save();

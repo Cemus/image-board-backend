@@ -72,7 +72,7 @@ const threadSchema = new Schema(
       type: Number,
       required: false,
     },
-    replies: [replySchema],
+    replies: [{ type: Schema.Types.ObjectId, ref: "Reply" }],
   },
   { timestamps: true }
 );
