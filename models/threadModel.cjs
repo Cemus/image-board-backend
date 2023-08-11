@@ -31,7 +31,7 @@ const replySchema = new Schema(
       type: Number,
       required: false,
     },
-    replies: [
+    directReplies: [
       {
         type: String,
       },
@@ -42,6 +42,9 @@ const replySchema = new Schema(
 
 const threadSchema = new Schema(
   {
+    formatedId: {
+      type: String,
+    },
     opName: {
       type: String,
       required: false,
@@ -73,6 +76,11 @@ const threadSchema = new Schema(
       required: false,
     },
     replies: [{ type: Schema.Types.ObjectId, ref: "Reply" }],
+    directReplies: [
+      {
+        type: String,
+      },
+    ],
   },
   { timestamps: true }
 );

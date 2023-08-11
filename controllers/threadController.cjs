@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const { Thread, Reply } = require("../models/threadModel.cjs");
 const fs = require("fs");
 const { idFormat } = require("../utils/idFormat.cjs");
+
 // GET every threads
 const getThreads = async (req, res) => {
   const threads = await Thread.find({});
@@ -20,6 +21,7 @@ const getSingleThread = async (req, res) => {
     return res.status(404).json({ error: "No such thread" });
   }
   const thread = await Thread.findById(id).populate("replies");
+
   if (!thread) {
     return res.status(404).json({ error: "No such thread" });
   }
@@ -85,7 +87,10 @@ const createThread = async (req, res) => {
       imageSize: Math.floor(size / 1000),
       replies: [],
     });
+    await thread.save();
 
+    thread.formatedId = idFormat(thread._id);
+    await thread.save();
     res.status(200).json(thread);
   } catch (error) {
     console.log(error);
@@ -143,17 +148,22 @@ const createReply = async (req, res) => {
     const regex = /(\d{8})/g;
     if (regex.test(comment)) {
       const matches = comment.match(regex);
+      let parentReply;
       for (const match of matches) {
-        const parentReply = await Reply.findOne({
+        parentReply = await Reply.findOne({
           formatedId: match,
         });
+        if (!parentReply) {
+          parentReply = await Thread.findOne({
+            formatedId: match,
+          });
+        }
         if (parentReply) {
-          parentReply.replies.push(newReply.formatedId);
+          parentReply.directReplies.push(newReply.formatedId);
           await parentReply.save();
+          console.log(parentReply);
         } else {
-          console.log(
-            `Aucun commentaire parent trouvé pour la référence ${match}`
-          );
+          console.log(`No comment found : ${match}`);
         }
       }
     }
