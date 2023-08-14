@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
+
+const counterSchema = new Schema({
+  value: { type: Number, default: 0 },
+});
+
 const replySchema = new Schema(
   {
     formatedId: {
@@ -75,6 +80,10 @@ const threadSchema = new Schema(
       type: Number,
       required: false,
     },
+    bumpDate: {
+      type: Date,
+      default: null,
+    },
     replies: [{ type: Schema.Types.ObjectId, ref: "Reply" }],
     directReplies: [
       {
@@ -85,7 +94,8 @@ const threadSchema = new Schema(
   { timestamps: true }
 );
 
+const Counter = mongoose.model("Counter", counterSchema);
 const Thread = mongoose.model("Thread", threadSchema);
 const Reply = mongoose.model("Reply", replySchema);
 
-module.exports = { Thread, Reply };
+module.exports = { Thread, Reply, Counter };

@@ -4,10 +4,11 @@ const mongoose = require("mongoose");
 const { Thread, Reply } = require("../models/threadModel.cjs");
 const fs = require("fs");
 const { idFormat } = require("../utils/idFormat.cjs");
+const { uniqueIdGeneration } = require("../utils/uniqueIdGeneration.cjs");
 
 // GET every threads
 const getThreads = async (req, res) => {
-  const threads = await Thread.find({});
+  const threads = await Thread.find({}).sort({ bumpDate: -1 });
   if (!threads) {
     return res.status(204);
   }
@@ -88,9 +89,16 @@ const createThread = async (req, res) => {
       replies: [],
     });
     await thread.save();
-
-    thread.formatedId = idFormat(thread._id);
+    thread.bumpDate = thread.createdAt;
+    thread.formatedId = await uniqueIdGeneration();
     await thread.save();
+
+    const allThreads = await Thread.find({}).sort({ bumpDate: 1 });
+    const maxThreads = 16;
+    if (allThreads.length > maxThreads) {
+      await Thread.findByIdAndDelete(allThreads[0]._id);
+    }
+
     res.status(200).json(thread);
   } catch (error) {
     console.log(error);
@@ -135,7 +143,7 @@ const createReply = async (req, res) => {
   });
   await newReply.save();
 
-  newReply.formatedId = idFormat(newReply._id);
+  newReply.formatedId = await uniqueIdGeneration();
   await newReply.save();
 
   //Le thread
@@ -169,7 +177,7 @@ const createReply = async (req, res) => {
     }
 
     thread.replies.push(newReply);
-
+    thread.bumpDate = newReply.createdAt;
     await thread.save();
     res.status(200).json(thread);
   } catch (error) {
