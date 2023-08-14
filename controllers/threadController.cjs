@@ -126,7 +126,6 @@ const createReply = async (req, res) => {
   size = req.file ? req.file.size : 0;
   // Test ID
   const { id } = req.params;
-  console.log(id);
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ error: "bad ID" });
   }
@@ -169,7 +168,6 @@ const createReply = async (req, res) => {
         if (parentReply) {
           parentReply.directReplies.push(newReply.formatedId);
           await parentReply.save();
-          console.log(parentReply);
         } else {
           console.log(`No comment found : ${match}`);
         }
@@ -181,7 +179,6 @@ const createReply = async (req, res) => {
     await thread.save();
     res.status(200).json(thread);
   } catch (error) {
-    console.log(error);
     return res.status(400).json({ error: error.message });
   }
 };
