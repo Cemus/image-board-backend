@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const threadRoutes = require("./routes/thread.cjs");
 const path = require("path");
 
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 const app = express();
 app.use(compression());
 app.use(express.json());
