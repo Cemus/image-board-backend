@@ -11,7 +11,7 @@ const corsOptions = {
   optionSuccessStatus: 200,
 };
 
-const port = process.env.PORT || 3000;
+const port = process.env.DB_URI || 3000;
 const app = express();
 app.use(cors(corsOptions));
 app.use(compression());
