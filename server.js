@@ -4,9 +4,16 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const threadRoutes = require("./routes/thread.cjs");
 const path = require("path");
+const cors = require("cors");
+const corsOptions = {
+  origin: "*",
+  credentials: true,
+  optionSuccessStatus: 200,
+};
 
 const port = process.env.PORT || 3000;
 const app = express();
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json());
 app.use((req, res, next) => {
